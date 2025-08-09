@@ -6,12 +6,24 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <vector>
+
+// Forward declare Order for use in PriceLevel
+struct Order;
+
+struct PriceLevel {
+  uint64_t quantity;
+  Order *head = nullptr;
+  Order *tail = nullptr;
+};
 
 struct Order {
   uint64_t id;
   char side;
   uint32_t quantity;
-  uint32_t price; // Price is stored as an integer (e.g., 150.50 is 1505000)
+  uint32_t price;
+  Order *prev = nullptr;
+  Order *next = nullptr;
 };
 
 class OrderBook {
@@ -24,12 +36,12 @@ public:
   void display() const;
 
 private:
-  void add_to_level(uint32_t price, uint32_t qty, char side);
-  void remove_from_level(uint32_t price, uint32_t qty, char side);
+  void add_to_level(Order *order);
+  void remove_from_level(Order *order);
 
   std::unordered_map<uint64_t, Order *> orders_;
-  std::map<uint32_t, uint64_t, std::greater<uint32_t>> bids_;
-  std::map<uint32_t, uint64_t> asks_;
+  std::map<uint32_t, PriceLevel, std::greater<uint32_t>> bids_;
+  std::map<uint32_t, PriceLevel> asks_;
 };
 
 class OrderBookManager {
@@ -42,5 +54,4 @@ private:
 };
 
 extern OrderBookManager g_orderBookManager;
-
 #endif // ORDER_BOOK_HPP
