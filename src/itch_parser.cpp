@@ -7,19 +7,15 @@
 #include <string>
 #include <unordered_map>
 
-// --- Global Variables ---
-OrderBookManager g_orderBookManager;
-ObjectPool<Order> g_order_pool(2000000); // 2 Million orders pre-allocated
+// OrderBookManager is defined in order_book.cpp
+extern OrderBookManager g_orderBookManager;
 static std::unordered_map<uint64_t, std::string> g_order_to_symbol_map;
 
-// --- Helper Functions ---
 std::string extractSymbol(const char *field, size_t len) {
   std::string symbol(field, len);
   size_t end = symbol.find_last_not_of(' ');
   return (end == std::string::npos) ? "" : symbol.substr(0, end + 1);
 }
-
-// --- Individual Message Parsing Functions ---
 
 void handleAddOrder(const AddOrderMessage *msg) {
   std::string symbol = extractSymbol(msg->stockSymbol, 8);
@@ -100,11 +96,9 @@ void handleOrderReplace(const OrderReplaceMessage *msg) {
   }
 }
 
-// --- Main Packet Parsing Function ---
 void parse_packet(const char *buffer, size_t size) {
   const char *current_pos = buffer;
   const char *end_pos = buffer + size;
-  static long long message_counter = 0;
 
   while (current_pos < end_pos) {
     char messageType = *current_pos;
@@ -161,10 +155,5 @@ void parse_packet(const char *buffer, size_t size) {
     if (messageLength == 0 || (current_pos + messageLength > end_pos))
       break;
     current_pos += messageLength;
-    message_counter++;
-
-    if (message_counter % 500000 == 0) {
-      g_orderBookManager.displayAllBooks();
-    }
   }
 }
